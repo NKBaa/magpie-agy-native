@@ -38,7 +38,13 @@
     },
     "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjggMTI4Ij48cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgcng9IjI4IiBmaWxsPSIjMTExODI3Ii8+PHBhdGggZD0iTTY0IDE4IDEwNiA5NiA2NCA3NiAyMiA5NloiIGZpbGw9IiM2MEE1RkEiLz48Y2lyY2xlIGN4PSI2NCIgY3k9IjU4IiByPSIxMCIgZmlsbD0iI0ZGRiIvPjwvc3ZnPg==",
     "maxConcurrency": 4
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NKBaa/magpie-agy-native.git"
+  },
+  "homepage": "https://github.com/NKBaa/magpie-agy-native#readme",
+  "bugs": {
+    "url": "https://github.com/NKBaa/magpie-agy-native/issues"
   }
 }
-
-

@@ -38,6 +38,12 @@
 在插件目录执行：
 
 ```sh
+magpie plugin add https://github.com/NKBaa/magpie-agy-native
+```
+
+本地开发也可以直接安装 checkout 目录：
+
+```sh
 magpie plugin add <插件目录>
 ```
 
@@ -155,5 +161,6 @@ npm test
 - Agent Client Protocol: <https://agentclientprotocol.com/>
 - Antigravity CLI / ACP 由 Google 提供
 - 设计参考：`DylanLIiii/opencode-antigravity-bridge`、`yulong-ge/magpie-antigravity-acp`，均为 MIT
+
 
 
