@@ -1,0 +1,44 @@
+{
+  "name": "magpie-agy-native",
+  "version": "0.1.0",
+  "description": "Magpie provider plugin backed by the official Antigravity agy ACP runtime.",
+  "type": "module",
+  "main": "./index.mjs",
+  "exports": "./index.mjs",
+  "files": [
+    "index.mjs",
+    "src",
+    "README.md",
+    "LICENSE",
+    "NOTICE.md",
+    "registry-entry.json"
+  ],
+  "keywords": [
+    "magpie",
+    "magpie-plugin",
+    "opencode",
+    "provider",
+    "antigravity",
+    "agy",
+    "acp"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20",
+    "bun": ">=1.0"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "magpie": {
+    "name": "Antigravity 原生接入 agy Native",
+    "summary": {
+      "en": "Use the installed official agy ACP runtime with native streaming, model discovery and quota display.",
+      "zh": "通过本机官方 agy ACP 运行时接入 Antigravity，支持原生流式输出、模型发现和额度展示。"
+    },
+    "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjggMTI4Ij48cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgcng9IjI4IiBmaWxsPSIjMTExODI3Ii8+PHBhdGggZD0iTTY0IDE4IDEwNiA5NiA2NCA3NiAyMiA5NloiIGZpbGw9IiM2MEE1RkEiLz48Y2lyY2xlIGN4PSI2NCIgY3k9IjU4IiByPSIxMCIgZmlsbD0iI0ZGRiIvPjwvc3ZnPg==",
+    "maxConcurrency": 4
+  }
+}
+
+
