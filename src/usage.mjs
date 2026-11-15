@@ -83,7 +83,10 @@ export function parseUsagePayload(payload) {
 }
 
 function runUsage(runtime, env) {
-  const args = ["-p", "/usage", "--output-format", "json", "--print-timeout", "30s"]
+  const args = [
+    ...(runtime.geminiDir ? [`--gemini_dir=${runtime.geminiDir}`] : []),
+    "-p", "/usage", "--output-format", "json", "--print-timeout", "30s",
+  ]
   const spec = commandSpec(runtime.executable || runtime.command, args, env)
   return new Promise((resolve, reject) => {
     const child = spawn(spec.command, spec.args, {
@@ -122,21 +125,22 @@ function runUsage(runtime, env) {
   })
 }
 
-export async function readUsage(env = process.env) {
-  const runtime = resolveRuntime(env)
+export async function readUsage(env = process.env, { geminiDir } = {}) {
+  const runtime = resolveRuntime(env, { geminiDir })
   if (!runtime.executable) {
     throw new Error("agy /usage requires the official agy executable; custom MAGPIE_AGY_COMMAND is not supported for quota reads")
   }
   return runUsage(runtime, env)
 }
 
-export async function usage(env = process.env) {
+export async function usage(env = process.env, options = {}) {
   try {
-    return parseUsagePayload(await readUsage(env))
+    return parseUsagePayload(await readUsage(env, options))
   } catch (error) {
     return { error: `Antigravity quota read failed: ${error?.message || error}`, windows: [], signIn: "kept" }
   }
 }
 
 export const _usageInternals = { bucketWindow, resetFields }
+
 

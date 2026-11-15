@@ -3,7 +3,7 @@ import { runtimeEnvironment, runtimeDescription } from "./runtime.mjs"
 
 const MAX_LINE_BYTES = 64 * 1024 * 1024
 const STDERR_TAIL_BYTES = 16 * 1024
-const PACKAGE_VERSION = "0.1.0"
+const PACKAGE_VERSION = "0.2.0"
 const CLIENT_INFO = Object.freeze({ name: "magpie-agy-native", version: PACKAGE_VERSION })
 
 function numberFromEnv(env, key, fallback) {
@@ -322,6 +322,7 @@ export class AcpClient {
 }
 
 export const _acpInternals = { withTimeout, selectedPermission, CLIENT_INFO }
+
 
 
 

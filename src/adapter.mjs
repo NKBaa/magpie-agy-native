@@ -133,8 +133,8 @@ function updateText(update) {
   return textFromContent(update.content)
 }
 
-async function runAcp({ body, prompt, signal, env, cwd, permissionPolicy, onReady, onText, onThought }) {
-  const runtime = resolveRuntime(env)
+async function runAcp({ body, prompt, signal, env, cwd, geminiDir, permissionPolicy, onReady, onText, onThought }) {
+  const runtime = resolveRuntime(env, { geminiDir })
   const client = new AcpClient({
     runtime,
     env,
@@ -203,6 +203,7 @@ async function complete({ body, prompt, init, options }) {
     signal: init?.signal,
     env: options.env,
     cwd: options.cwd,
+    geminiDir: options.geminiDir,
     permissionPolicy: options.permissionPolicy,
     onText: (chunk) => { text += chunk },
     onThought: (chunk) => { thought += chunk },
@@ -276,6 +277,7 @@ async function streamResponse({ body, prompt, init, options }) {
         signal: init?.signal,
         env: options.env,
         cwd: options.cwd,
+        geminiDir: options.geminiDir,
         permissionPolicy: options.permissionPolicy,
         onReady: ({ client }) => {
           options.onClient?.(client)
@@ -367,6 +369,7 @@ export async function createChatResponse(input, init = {}, options = {}) {
         options: {
           env,
           cwd,
+          geminiDir: options.geminiDir,
           permissionPolicy,
           onClient(value) { client = value },
           onCancel() { client?.cancelTurn(); client?.close(new DOMException("stream cancelled", "AbortError")) },
@@ -377,7 +380,7 @@ export async function createChatResponse(input, init = {}, options = {}) {
       body,
       prompt,
       init,
-      options: { env, cwd, permissionPolicy },
+      options: { env, cwd, geminiDir: options.geminiDir, permissionPolicy },
     })
     return jsonResponse(completion)
   } catch (error) {
@@ -386,6 +389,7 @@ export async function createChatResponse(input, init = {}, options = {}) {
 }
 
 export const _adapterInternals = { mapStopReason, errorStatus, classifyError, textFromContent, runAcp }
+
 
 
 

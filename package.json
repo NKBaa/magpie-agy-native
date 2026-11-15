@@ -1,7 +1,7 @@
 {
   "name": "magpie-agy-native",
-  "version": "0.1.0",
-  "description": "Magpie provider plugin backed by the official Antigravity agy ACP runtime.",
+  "version": "0.2.0",
+  "description": "Magpie provider plugin backed by the official Antigravity agy ACP runtime, with isolated account profiles.",
   "type": "module",
   "main": "./index.mjs",
   "exports": "./index.mjs",
@@ -11,7 +11,8 @@
     "README.md",
     "LICENSE",
     "NOTICE.md",
-    "registry-entry.json"
+    "registry-entry.json",
+    "bin"
   ],
   "keywords": [
     "magpie",
@@ -33,8 +34,8 @@
   "magpie": {
     "name": "Antigravity 原生接入 agy Native",
     "summary": {
-      "en": "Use the installed official agy ACP runtime with native streaming, model discovery and quota display.",
-      "zh": "通过本机官方 agy ACP 运行时接入 Antigravity，支持原生流式输出、模型发现和额度展示。"
+      "en": "Use the official agy ACP runtime through Magpie with isolated account profiles, native streaming, model discovery and quota display.",
+      "zh": "通过本机官方 agy ACP 运行时接入 Antigravity，支持多账号隔离、原生流式输出、模型发现和额度展示。"
     },
     "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjggMTI4Ij48cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgcng9IjI4IiBmaWxsPSIjMTExODI3Ii8+PHBhdGggZD0iTTY0IDE4IDEwNiA5NiA2NCA3NiAyMiA5NloiIGZpbGw9IiM2MEE1RkEiLz48Y2lyY2xlIGN4PSI2NCIgY3k9IjU4IiByPSIxMCIgZmlsbD0iI0ZGRiIvPjwvc3ZnPg==",
     "maxConcurrency": 4
@@ -46,5 +47,8 @@
   "homepage": "https://github.com/NKBaa/magpie-agy-native#readme",
   "bugs": {
     "url": "https://github.com/NKBaa/magpie-agy-native/issues"
+  },
+  "bin": {
+    "agy-native-account": "./bin/agy-native-account.mjs"
   }
 }

@@ -90,12 +90,26 @@ export function commandSpec(command, args, env = process.env) {
   return { command: comspec, args: ["/d", "/s", "/c", line] }
 }
 
-export function resolveRuntime(env = process.env) {
-  const home = env.MAGPIE_AGY_HOME || env.GEMINI_HOME || undefined
+function withGeminiDir(args, geminiDir) {
+  if (!geminiDir) return args
+  if (args.some((arg) => String(arg).startsWith("--gemini_dir="))) return args
+  return [...args, `--gemini_dir=${geminiDir}`]
+}
+
+export function resolveRuntime(env = process.env, { geminiDir } = {}) {
+  const home = geminiDir || env.MAGPIE_AGY_HOME || env.GEMINI_HOME || undefined
   const configured = parseArray(env.MAGPIE_AGY_COMMAND, "MAGPIE_AGY_COMMAND")
   if (configured) {
-    const wrapped = commandSpec(configured[0], configured.slice(1), env)
-    return { command: wrapped.command, args: wrapped.args, home, source: "MAGPIE_AGY_COMMAND" }
+    const args = withGeminiDir(configured.slice(1), geminiDir)
+    const wrapped = commandSpec(configured[0], args, env)
+    return {
+      command: wrapped.command,
+      args: wrapped.args,
+      executable: configured[0],
+      home,
+      geminiDir,
+      source: "MAGPIE_AGY_COMMAND",
+    }
   }
 
   const explicit = env.MAGPIE_AGY_BIN || env.AGY_BIN
@@ -120,13 +134,17 @@ export function resolveRuntime(env = process.env) {
     )
   }
 
-  const args = parseArray(env.MAGPIE_AGY_ACP_ARGS, "MAGPIE_AGY_ACP_ARGS") || DEFAULT_ACP_ARGS
+  const args = withGeminiDir(
+    parseArray(env.MAGPIE_AGY_ACP_ARGS, "MAGPIE_AGY_ACP_ARGS") || DEFAULT_ACP_ARGS,
+    geminiDir,
+  )
   const wrapped = commandSpec(command, args, env)
   return {
     command: wrapped.command,
     args: wrapped.args,
     executable: command,
     home,
+    geminiDir,
     source,
   }
 }
@@ -134,6 +152,7 @@ export function resolveRuntime(env = process.env) {
 export function runtimeEnvironment(runtime, env = process.env) {
   const output = { ...env }
   if (runtime.home) output.GEMINI_HOME = runtime.home
+  if (runtime.geminiDir && process.platform === "win32" && !output.WSL_INTEROP) output.WSL_INTEROP = "1"
   output.NO_COLOR = "1"
   output.TERM = output.TERM || "dumb"
   return output
@@ -143,23 +162,19 @@ export function runtimeDescription(runtime) {
   return JSON.stringify([runtime.executable || runtime.command, ...runtime.args])
 }
 
-export function inspectRuntime(env = process.env) {
+export function inspectRuntime(env = process.env, options = {}) {
   try {
-    const runtime = resolveRuntime(env)
+    const runtime = resolveRuntime(env, options)
     return {
       ok: true,
       binary: runtime.executable || runtime.command,
       args: runtime.args,
       source: runtime.source,
+      geminiDir: runtime.geminiDir || null,
     }
   } catch (error) {
     return { ok: false, error: error?.message || String(error) }
   }
 }
 
-export const _runtimeInternals = { parseArray, findOnPath, commonCandidates }
-
-
-
-
-
+export const _runtimeInternals = { parseArray, findOnPath, commonCandidates, withGeminiDir }

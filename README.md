@@ -7,6 +7,7 @@
 ## 功能
 
 - 官方 ACP JSON-RPC 接入：`agy acp`
+- 多账号配置、token、ACP 进程、模型缓存和额度按 `GEMINI_HOME` 隔离
 - 从 `session/new` 动态读取当前账号可见模型
 - 自动合并 `-low` / `-medium` / `-high` 等推理档位
 - OpenAI Chat Completions 兼容
@@ -56,6 +57,71 @@ magpie models
 
 `plugin login agy-native` 只是在 Magpie 里建立一个 keyless 账号标记；真正的 Google 登录态仍由 `agy` 管理。
 
+## 多账号隔离
+
+不填 profile 名时使用 `agy` 的全局登录态，这一种模式不隔离。需要多账号时，每个账号使用独立的 `GEMINI_HOME`，插件通过：
+
+```text
+agy acp --gemini_dir=<profile-dir>
+```
+
+启动独立 ACP 子进程。Magpie 的每个账号行只绑定一个 profile，因此 token、模型列表、额度读取和 ACP 进程不会串用。
+
+### 1. 登录一个隔离 profile
+
+使用插件自带的账号 CLI：
+
+```sh
+node <插件目录>/bin/agy-native-account.mjs login work
+```
+
+或者手动执行：
+
+```powershell
+$env:GEMINI_HOME = "$env:USERPROFILE\.config\magpie-agy-native\accounts\work"
+$env:WSL_INTEROP = "1"   # Windows 上强制 agy 使用文件 token，而不是整机 Credential Manager
+agy --gemini_dir="$env:GEMINI_HOME"
+Remove-Item Env:\WSL_INTEROP
+```
+
+登录完成后应存在：
+
+```text
+<profile-dir>/antigravity-cli/antigravity-oauth-token
+```
+
+### 2. 在 Magpie 登记 profile
+
+```sh
+magpie plugin login agy-native
+```
+
+在 `agy profile name` 输入：
+
+```text
+work
+```
+
+重复登录并输入另一个名字，即可增加第二个账号：
+
+```text
+personal
+```
+
+插件会为每个 profile 返回独立的 Magpie `accountId`，例如 `agy-work`、`agy-personal`。Magpie 的账号选择和路由规则决定本次请求使用哪个 profile。
+
+### 3. 默认账号
+
+profile 留空时返回 `agy` 默认账号，继续使用 `agy` 原本的全局登录。默认账号与命名 profile 可以同时保留。
+
+### 隔离边界
+
+- 已隔离：`GEMINI_HOME`、OAuth token 文件、ACP 子进程、模型发现缓存、额度读取。
+- 未隔离：操作系统账号、网络出口、同一用户对 profile 目录的文件访问权限。
+- Windows 的文件 token 是明文 JSON，建议限制账号目录 ACL。
+- `WSL_INTEROP=1` 在原生 Windows 上是 agy 的文件存储开关；真实 WSL 环境中不要覆盖已有的 `WSL_INTEROP`。
+- 如果要求更强隔离，请让每个账号运行在独立 Windows 用户、独立 WSL 发行版或独立容器中。
+
 ## 配置
 
 插件默认从 `PATH` 查找 `agy`。如果有多个安装或找不到：
@@ -78,6 +144,7 @@ $env:MAGPIE_AGY_COMMAND = '["C:\\path\\to\\agy.exe","acp"]'
 | `MAGPIE_AGY_COMMAND` | 完整 argv 的 JSON 数组，优先级最高 |
 | `MAGPIE_AGY_HOME` | 写入子进程的 `GEMINI_HOME` |
 | `MAGPIE_AGY_CWD` | ACP 会话工作目录 |
+| `MAGPIE_AGY_ACCOUNTS_DIR` | 命名账号根目录，默认 `~/.config/magpie-agy-native/accounts` |
 | `MAGPIE_AGY_AUTO_APPROVE=1` | 等效于打开插件的自动批准工具选项 |
 | `MAGPIE_AGY_PROMPT_LIMIT_BYTES` | 单次 ACP 文本预算，默认 `180000` |
 | `MAGPIE_AGY_START_TIMEOUT_MS` | ACP 启动 / 初始化超时，默认 `45000` |
@@ -149,6 +216,7 @@ npm test
 
 - 模型发现与推理档位合并
 - ACP 权限请求拒绝
+- 命名账号使用独立 `--gemini_dir`
 - 原生流式 SSE
 - 非流式 completion
 - token usage
@@ -161,6 +229,7 @@ npm test
 - Agent Client Protocol: <https://agentclientprotocol.com/>
 - Antigravity CLI / ACP 由 Google 提供
 - 设计参考：`DylanLIiii/opencode-antigravity-bridge`、`yulong-ge/magpie-antigravity-acp`，均为 MIT
+
 
 
 

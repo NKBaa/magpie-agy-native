@@ -1,6 +1,11 @@
 #!/usr/bin/env node
 import readline from "node:readline"
 
+const expectedGeminiDir = process.env.FAKE_AGY_EXPECT_GEMINI_DIR
+if (expectedGeminiDir && !process.argv.includes(`--gemini_dir=${expectedGeminiDir}`)) {
+  console.error(`missing --gemini_dir=${expectedGeminiDir}; argv=${process.argv.slice(2).join(" ")}`)
+  process.exit(42)
+}
 const input = readline.createInterface({ input: process.stdin, crlfDelay: Infinity })
 let sessionId = "fake-acp-session"
 let promptCounter = 0
@@ -123,4 +128,5 @@ input.on("line", (line) => {
 })
 
 input.on("close", () => process.exit(0))
+
 

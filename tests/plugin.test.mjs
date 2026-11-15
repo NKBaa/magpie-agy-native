@@ -2,12 +2,15 @@ import assert from "node:assert/strict"
 import { after, beforeEach, test } from "node:test"
 import { fileURLToPath } from "node:url"
 import { dirname, join } from "node:path"
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs"
+import { tmpdir } from "node:os"
 
 import { AgyNativePlugin, _internal } from "../index.mjs"
 import { buildConversation } from "../src/prompt.mjs"
 import { groupModels, chooseWireModel } from "../src/models.mjs"
 import { parseUsagePayload } from "../src/usage.mjs"
 import { classifyError } from "../src/adapter.mjs"
+import { ensureAccountDir, tokenPath } from "../src/accounts.mjs"
 
 const here = dirname(fileURLToPath(import.meta.url))
 const fakeAgy = join(here, "fake-agy.mjs")
@@ -175,3 +178,36 @@ test("reports an unknown model as an OpenAI-style error", async () => {
 
 
 
+
+test("isolates a named agy account with --gemini_dir", async (t) => {
+  const root = mkdtempSync(join(tmpdir(), "magpie-agy-account-test-"))
+  t.after(() => rmSync(root, { recursive: true, force: true }))
+  process.env.MAGPIE_AGY_ACCOUNTS_DIR = root
+
+  const plugin = await AgyNativePlugin({ magpie: { option: () => false } })
+  const auth = await plugin.auth.methods[0].authorize({ account: "work" })
+  assert.equal(auth.type, "success")
+  assert.equal(auth.key, "agy:work")
+  assert.equal(auth.accountId, "agy-work")
+
+  const dir = ensureAccountDir("work", process.env)
+  const token = tokenPath(dir)
+  mkdirSync(dirname(token), { recursive: true })
+  writeFileSync(token, "{}", { mode: 0o600 })
+  process.env.FAKE_AGY_EXPECT_GEMINI_DIR = dir
+
+  const models = await plugin.provider.models({}, { auth })
+  assert.ok(models["gemini-4-argon"])
+  assert.ok(models["gemini-4-pro"])
+
+  const loader = await plugin.auth.loader(async () => auth)
+  const response = await loader.fetch("http://agy-native.invalid/v1/chat/completions", {
+    method: "POST",
+    body: JSON.stringify({
+      model: "gemini-4-argon",
+      messages: [{ role: "user", content: "Use the isolated account" }],
+    }),
+  })
+  assert.equal(response.status, 200)
+  assert.equal((await response.json()).choices[0].message.content, "Hello from agy.")
+})

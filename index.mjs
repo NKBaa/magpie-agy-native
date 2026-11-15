@@ -1,5 +1,6 @@
 import { AcpClient } from "./src/acp.mjs"
-import { createChatResponse } from "./src/adapter.mjs"
+import { accountAuthResult, accountFromAuth } from "./src/accounts.mjs"
+import { createChatResponse, errorResponse } from "./src/adapter.mjs"
 import { DEFAULT_MODEL_ID, PROVIDER_ID, fallbackModels, groupModels } from "./src/models.mjs"
 import { resolveRuntime, runtimeDescription } from "./src/runtime.mjs"
 import { usage as readUsage } from "./src/usage.mjs"
@@ -24,8 +25,12 @@ function permissionPolicy(ctx) {
   return (optionEnabled(ctx, "autoApproveTools") || process.env.MAGPIE_AGY_AUTO_APPROVE === "1") ? "allow" : "deny"
 }
 
-async function discoverModels(env = process.env, { force = false } = {}) {
-  const runtime = resolveRuntime(env)
+function selectedAccount(auth, { allowMissingToken = false } = {}) {
+  return accountFromAuth(auth, { env: process.env, allowMissingToken })
+}
+
+async function discoverModels(env = process.env, { force = false, geminiDir } = {}) {
+  const runtime = resolveRuntime(env, { geminiDir })
   const key = runtimeDescription(runtime)
   if (!force && modelCache && modelCacheKey === key && Date.now() - modelCacheAt < MODEL_CACHE_MS) {
     return modelCache
@@ -78,36 +83,67 @@ export async function AgyNativePlugin(ctx = {}) {
       methods: [{
         type: "api",
         keyless: true,
-        label: "Use the existing agy CLI sign-in",
+        label: "Use agy login / isolated profile",
         placeholder: "Run `agy` once to sign in",
-        async authorize() {
-          return { type: "success", key: "agy-native" }
+        prompts: [{
+          type: "text",
+          key: "account",
+          message: "agy profile name (blank = default global login)",
+          placeholder: "work",
+          required: false,
+        }],
+        async authorize(inputs = {}) {
+          try {
+            return accountAuthResult(inputs.account, process.env)
+          } catch (error) {
+            return { type: "failed", error: error?.message || String(error) }
+          }
         },
       }],
-      async loader(getAuth) {
-        const auth = await getAuth()
-        if (!auth) return {}
+      loader: async (getAuth) => {
         return {
           baseURL: API_BASE,
           apiKey: "agy-native",
-          fetch(input, init) {
-            return createChatResponse(input, init, {
-              env: process.env,
-              permissionPolicy: permissionPolicy(ctx),
-            })
+          fetch: async (input, init) => {
+            try {
+              const auth = await getAuth()
+              if (!auth) {
+                throw Object.assign(new Error("No agy account is selected; run `magpie plugin login agy-native`"), {
+                  code: "sign_in_required", statusCode: 401,
+                })
+              }
+              const account = selectedAccount(auth)
+              return await createChatResponse(input, init, {
+                env: process.env,
+                geminiDir: account.dir,
+                permissionPolicy: permissionPolicy(ctx),
+              })
+            } catch (error) {
+              return errorResponse(error, undefined, "sign_in_required")
+            }
           },
         }
       },
-      async usage() {
-        return readUsage(process.env)
+      async usage(getAuth) {
+        try {
+          const account = selectedAccount(await getAuth())
+          return readUsage(process.env, { geminiDir: account.dir })
+        } catch (error) {
+          return {
+            windows: [],
+            error: `Antigravity account is unavailable: ${error?.message || error}`,
+            signIn: "kept",
+          }
+        }
       },
     },
 
     provider: {
       id: PROVIDER_ID,
-      async models() {
+      async models(_provider, context = {}) {
         try {
-          return await discoverModels(process.env)
+          const account = selectedAccount(context.auth, { allowMissingToken: true })
+          return await discoverModels(process.env, { geminiDir: account.dir })
         } catch (error) {
           if (process.env.MAGPIE_AGY_DEBUG === "1") {
             console.error(`[agy-native] model discovery failed: ${error?.message || error}`)
@@ -128,11 +164,9 @@ export const _internal = {
   fallbackModels,
   groupModels,
   permissionPolicy,
+  selectedAccount,
   PROVIDER_ID,
   DEFAULT_MODEL_ID,
   API_BASE,
 }
-
-
-
 

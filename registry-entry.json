@@ -1,9 +1,11 @@
 {
   "package": "magpie-agy-native",
   "name": "Antigravity 原生接入 agy Native",
-  "providers": ["agy-native"],
+  "providers": [
+    "agy-native"
+  ],
   "summary": {
-    "en": "Use the installed official agy ACP runtime through Magpie with native streaming, model discovery and quota display.",
-    "zh": "通过本机官方 agy ACP 运行时接入 Antigravity，支持原生流式输出、模型发现和额度展示。"
+    "en": "Use the official agy ACP runtime through Magpie with isolated account profiles, native streaming, model discovery and quota display.",
+    "zh": "通过本机官方 agy ACP 运行时接入 Antigravity，支持多账号隔离、原生流式输出、模型发现和额度展示。"
   }
 }
