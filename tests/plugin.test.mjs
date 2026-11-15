@@ -11,6 +11,7 @@ import { groupModels, chooseWireModel } from "../src/models.mjs"
 import { parseUsagePayload } from "../src/usage.mjs"
 import { classifyError } from "../src/adapter.mjs"
 import { ensureAccountDir, tokenPath } from "../src/accounts.mjs"
+import { resolveRuntime } from "../src/runtime.mjs"
 
 const here = dirname(fileURLToPath(import.meta.url))
 const fakeAgy = join(here, "fake-agy.mjs")
@@ -210,4 +211,14 @@ test("isolates a named agy account with --gemini_dir", async (t) => {
   })
   assert.equal(response.status, 200)
   assert.equal((await response.json()).choices[0].message.content, "Hello from agy.")
+})
+
+test("supports AGY_PATH and appends the profile gemini dir", () => {
+  const env = { ...process.env, AGY_PATH: process.execPath }
+  delete env.MAGPIE_AGY_COMMAND
+  delete env.MAGPIE_AGY_BIN
+  delete env.AGY_BIN
+  const runtime = resolveRuntime(env, { geminiDir: "/config/agy-accounts/work" })
+  assert.equal(runtime.executable, process.execPath)
+  assert.ok(runtime.args.includes("--gemini_dir=/config/agy-accounts/work"))
 })

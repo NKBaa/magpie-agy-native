@@ -76,6 +76,7 @@ function commonCandidates(env) {
     join(home, ".npm-global", "bin", "agy"),
     "/usr/local/bin/agy",
     "/usr/bin/agy",
+    "/config/home/.local/bin/agy",
   ]
 }
 
@@ -112,12 +113,12 @@ export function resolveRuntime(env = process.env, { geminiDir } = {}) {
     }
   }
 
-  const explicit = env.MAGPIE_AGY_BIN || env.AGY_BIN
+  const explicit = env.MAGPIE_AGY_BIN || env.AGY_BIN || env.AGY_PATH
   const explicitResolved = explicit
     ? ((explicit.includes("/") || explicit.includes("\\")) ? resolve(explicit) : findOnPath(env, [explicit]) || resolve(explicit))
     : null
   let command = explicit ? explicitResolved : findOnPath(env, ["agy"])
-  let source = explicit ? "MAGPIE_AGY_BIN" : "PATH"
+  let source = env.MAGPIE_AGY_BIN ? "MAGPIE_AGY_BIN" : env.AGY_BIN ? "AGY_BIN" : env.AGY_PATH ? "AGY_PATH" : "PATH"
 
   if (explicit && (!command || !isExecutable(command))) {
     throw new Error(`MAGPIE_AGY_BIN is not an executable file: ${explicit}`)
@@ -178,3 +179,4 @@ export function inspectRuntime(env = process.env, options = {}) {
 }
 
 export const _runtimeInternals = { parseArray, findOnPath, commonCandidates, withGeminiDir }
+

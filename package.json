@@ -1,6 +1,6 @@
 {
   "name": "magpie-agy-native",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Magpie provider plugin backed by the official Antigravity agy ACP runtime, with isolated account profiles.",
   "type": "module",
   "main": "./index.mjs",
